@@ -7,14 +7,14 @@ import java.util.List;
 
 public interface CustomerService {
 
-    public ResponseEntity<Customer> createCustomer(Customer customer);
+    ResponseEntity<Customer> createCustomer(Customer customer);
 
-    public ResponseEntity<Customer> getCustomerById(String custId);
+    ResponseEntity<Customer> getCustomerById(String custId);
 
-    public ResponseEntity<List<Customer>> findAllCustomer();
+    ResponseEntity<List<Customer>> findAllCustomer();
 
     ResponseEntity<Customer> updateCustomer(String custId, Customer customer);
 
-    public ResponseEntity<String> deleteCustomer(String custId);
+    ResponseEntity<String> deleteCustomer(String custId);
 
 }
