@@ -1,0 +1,104 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: CUSTOMER-MICROSERVICE
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-93420980.okta.com/oauth2/default
+      #we are creating client, cause customer will call hotel service internally, and it will require token in its header
+      client:
+        registration:
+          my-internal-microservice-client:
+            provider: okta
+            authorization-grant-type: client_crendentials
+            scope:
+              internal  #used for internal api calls
+            client-id: 0oaa9yyvj6e1dPJpk5d7
+            client-secret: vpZzj3b7BU8iZm9oi5YKGV8rf5lJDZWO26k__WGz
+        provider:
+          okta:
+            issuer-uri: https://dev-93420980.okta.com/oauth2/default
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/customer_microservice?useSSL=false
+    username: root
+    password: root
+    driver-class-name: com.mysql.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+#specify the env from where the application will pick the config data
+  profiles:
+    active:
+      - dev
+
+#for picking common data from config-server-microservice
+  config:
+    import: configserver:http://localhost:8085
+
+#common in all the service, so now placed in config-server-microservice
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    fetch-registry: true
+#    register-with-eureka: true
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
+
+#actuator setup
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+#resilience4j setup
+resilience4j:
+
+  circuitbreaker:
+    instances:
+      hotelServiceBreaker:
+        registerHealthIndicator: true
+        eventConsumerBufferSize: 10
+        failureRateThreshold: 50
+        minimumNumberOfCalls: 3
+        automaticTransitionFromOpenToHalfOpenEnabled: true
+        waitDurationInOpenState: 5s
+        permittedNumberOfCallsInHalfOpenState: 3
+        slidingWindowSize: 10
+        slidingWindowType: COUNT_BASED
+
+  retry:
+    instances:
+      hotelServiceRetry:
+        maxAttempts: 3
+        waitDuration: 5s
+
+  #using jmeter we can check this
+  ratelimiter:
+    instances:
+      customerRateLimiter:
+        limitRefreshPeriod: 4s
+        limitForPeriod: 2
+        timeoutDuration: 2s
+
+#okta setup for security
+okta:
+  oauth2:
+    issuer: https://dev-93420980.okta.com/oauth2/default
+    audience: api://default
